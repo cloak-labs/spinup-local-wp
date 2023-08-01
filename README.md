@@ -1,7 +1,9 @@
 # Spinup Local WP
 Made by the [CloakWP](https://github.com/cloak-labs/cloakwp) team.
 
-Spinup Local WP makes local WordPress development easy for projects using the [Bedrock](https://roots.io/bedrock/) boilerplate by Roots (currently untested with regular WordPress) -- which is designed for developers who want to manage their projects with Git and Composer. It works similarly to how `@wordpress/env` abstracts the complexity of managing your own Docker setup, providing a set of simple commands to magically spin up your local WordPress instance; however, unlike `@wordpress/env`, Spinup Local WP isn't designed to only handle transient dev environments solely for the purpose of testing custom plugins/themes; it is meant to be used alongside your real, version-controlled WordPress instance.
+Spinup Local WP makes local WordPress development easy for projects using the [Bedrock](https://roots.io/bedrock/) boilerplate by Roots (currently untested with regular WordPress) -- which is designed for developers who want to manage their projects with Git and Composer. It also works with [CloakWP Bedrock](https://github.com/cloak-labs/cloakwp-bedrock), our modified version of Bedrock specifically tuned for CloakWP headless WordPress projects.
+
+It works similarly to how `@wordpress/env` abstracts the complexity of managing your own Docker setup, providing a set of simple commands to magically spin up your local WordPress instance; however, unlike `@wordpress/env`, Spinup Local WP isn't designed to only handle transient dev environments solely for the purpose of testing custom plugins/themes; it is meant to be used alongside your real, version-controlled WordPress instance.
 
 It's an NPM package that acts as an abstraction layer over a typical, best-practice [Docker + Docker Compose](https://docs.docker.com/compose/) setup for WordPress. It includes the following services/features:
   - PHP 8.1,
@@ -21,8 +23,11 @@ You must download/install the following:
 - Node.js
 
 ## Install
-1. Spin up a new WordPress project using [Bedrock](https://roots.io/bedrock/), via their CLI command `composer create-project roots/bedrock` (already have a WP install? skip to step #4).
-2. Run `cd bedrock` to enter the newly created project (and optionally run `code .` to open it in VS Code)
+If you're building a headless WordPress project, you should strongly consider using [CloakWP Bedrock](https://github.com/cloak-labs/cloakwp-bedrock), which comes with Spinup Local WP pre-installed and configured.
+
+Otherwise, if you're using the regular Bedrock boilerplate, follow these steps: 
+1. Spin up a new WordPress project using [Bedrock](https://roots.io/bedrock/) via `composer create-project roots/bedrock` (already have a WP install? skip to step #4).
+2. cd into the newly created folder (and optionally run `code .` to open it in VS Code)
 3. Optionally follow the [other steps](https://roots.io/bedrock/docs/installation/) outlined in Bedrock's installation docs
 4. Run `npm init` and follow the prompts to generate a `package.json` file
 5. Run `npm install @cloakwp/spinup-local-wp`
@@ -32,16 +37,15 @@ You must download/install the following:
   "down": "spinup-local-wp dc down",
   "stop": "spinup-local-wp dc stop",
   "composer": "spinup-local-wp dc run composer",
-  "postinstall": "npm run composer create-project",
   "generate-env": "php -r \"copy('.env.example', '.env');\""
   "spinup-local-wp": "spinup-local-wp"
   ```
-7. Edit `.env.example` and add/customize this variable: `APP_NAME='enter-project-name'`, and optionally add other env variables, as noted in the [example file here](https://github.com/cloak-labs/cloakwp/blob/feat/localwp/packages/spinup-local-wp/.env.example), to further customize Spinup Local WP's behavior (only necessary if you deviate from the default folder structure). Make sure to always run `npm run generate-env` after modifying `.env.example`, as this will generate the real `.env` file from it.
+7. Create a `.env` file from `.env.example` and add this variable: `APP_NAME='enter-project-name'`; optionally add other env variables, as noted in the [example file here](https://github.com/cloak-labs/spinup-local-wp/.env.example), to further customize Spinup Local WP's behavior. For example, if WordPress is not properly spinning up when following the next "Run" steps below, it's likely because you need to adjust the `VOLUME_WORDPRESS_PATH` to point to your WordPress installation folder (should work out of the box if using NPM, but not PNPM, for example).
 
 
 ## Run
 - open the Docker Desktop app, 
-- from your project root, run:
+- from your WordPress project root, run:
 ```shell
 npm run dev
 ``` 
