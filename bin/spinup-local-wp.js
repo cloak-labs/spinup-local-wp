@@ -36,35 +36,23 @@ yargs
       }
 
       // Execute docker-compose commands
-      exec(`docker-compose -f "${dockerComposePath}" ${dockerComposeArgs}`, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error executing docker-compose command: ${error}`);
-          return;
-        }
+      const dockerComposeProcess = exec(
+        `docker-compose -f "${dockerComposePath}" ${dockerComposeArgs}`,
+        (error, stdout, stderr) => {
+          if (error) {
+            console.error(`Error executing docker-compose command: ${error}`);
+            return;
+          }
 
-        console.log(stdout);
-        console.error(stderr);
-      });
+          console.log(stdout);
+          console.error(stderr);
+        }
+      );
+
+      // Forward docker-compose output to the console
+      dockerComposeProcess.stdout.pipe(process.stdout);
+      dockerComposeProcess.stderr.pipe(process.stderr);
 
     },
   })
-  // .command({
-  //   command: 'docker',
-  //   describe: 'Execute docker commands',
-  //   handler: (argv) => {
-  //     // Get the subcommands and arguments to pass to docker
-  //     const dockerArgs = argv._.slice(1).join(' ');
-
-  //     // Execute docker commands
-  //     exec(`docker ${dockerArgs}`, (error, stdout, stderr) => {
-  //       if (error) {
-  //         console.error(`Error executing docker command: ${error}`);
-  //         return;
-  //       }
-
-  //       console.log(stdout);
-  //       console.error(stderr);
-  //     });
-  //   },
-  // })
   .help().argv;
