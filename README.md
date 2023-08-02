@@ -93,30 +93,30 @@ To run Docker Compose commands, use the `spinup-local-wp` command followed by `d
 Stop
 
 ```shell
-spinup-local-wp dc stop
+npm run spinup-local-wp dc stop
 ```
 
 Down (stop and remove)
 
 ```shell
-spinup-local-wp dc down
+npm run spinup-local-wp dc down
 ```
 
 Cleanup
 
 ```shell
-spinup-local-wp dc rm -v
+npm run spinup-local-wp dc rm -v
 ```
 
 Recreate
 
 ```shell
-spinup-local-wp dc up -d --force-recreate
+npm run spinup-local-wp dc up -d --force-recreate
 ```
 
 Rebuild docker container when Dockerfile has changed due to package update
 
 ```shell
-spinup-local-wp dc up -d --force-recreate --build
+npm run spinup-local-wp dc up -d --force-recreate --build
 ```
 </details>
