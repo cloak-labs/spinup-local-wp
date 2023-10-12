@@ -1,14 +1,14 @@
-version: '3.6'
+version: "3.6"
 services:
   nginx:
     image: nginx:latest
     container_name: ${APP_NAME}-nginx
     ports:
-      - '80:80'
+      - "80:80"
     volumes:
       - "./nginx/:/etc/nginx/templates/"
       - "${VOLUME_WORDPRESS_PATH:-../../../}:/var/www/html:rw,cached"
-      - "${VOLUME_LOCAL_PACKAGES_PATH}:/var/www/html/local-packages:rw,cached"
+      - "${VOLUME_LOCAL_PACKAGES_PATH}:/var/www/local-packages:rw,cached"
     environment:
       - "NGINX_ENVSUBST_TEMPLATE_SUFFIX=.conf"
       - "DOMAIN=${LOCAL_DOMAIN}"
@@ -22,7 +22,7 @@ services:
     container_name: ${APP_NAME}-mysql
     command: --lower_case_table_names=2
     volumes:
-       - '${VOLUME_WORDPRESS_PATH:-../../../}data/db:/var/lib/mysql:delegated,rw'
+      - "${VOLUME_WORDPRESS_PATH:-../../../}data/db:/var/lib/mysql:delegated,rw"
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
       - MYSQL_DATABASE=${DB_NAME}
@@ -30,7 +30,7 @@ services:
       - MYSQL_PASSWORD=${DB_PASSWORD}
     restart: always
     ports:
-      - '3306:3306'
+      - "3306:3306"
 
   wordpress:
     build:
@@ -40,10 +40,12 @@ services:
     volumes:
       - ./config/php.ini:/usr/local/etc/php/conf.d/php.ini
       - "${VOLUME_WORDPRESS_PATH:-../../../}:/var/www/html:rw,cached"
-      - "${VOLUME_LOCAL_PACKAGES_PATH}:/var/www/html/local-packages:rw,cached"
+      - "${VOLUME_LOCAL_PACKAGES_PATH}:/var/www/local-packages:rw,cached"
     depends_on:
       - mysql
     restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -55,7 +57,7 @@ services:
       PMA_PORT: 3306
       MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
     ports:
-      - '8082:80'
+      - "8082:80"
     links:
       - mysql:mysql
 
@@ -70,7 +72,7 @@ services:
     image: composer
     container_name: ${APP_NAME}-composer
     working_dir: /var/www/html
-    restart: 'no'
+    restart: "no"
     volumes:
       - "${VOLUME_WORDPRESS_PATH:-../../../}:/var/www/html:rw,cached"
-      - "${VOLUME_LOCAL_PACKAGES_PATH}:/var/www/html/local-packages:rw,cached"
+      - "${VOLUME_LOCAL_PACKAGES_PATH}:/var/www/local-packages:rw,cached"

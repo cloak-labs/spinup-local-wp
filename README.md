@@ -54,6 +54,20 @@ npm run dev
 - access PhpMyAdmin from http://127.0.0.1:8082/
 - access MailHog from http://0.0.0.0:8025/
 
+## Common Issues
+
+### 1. Can't upload images
+If you get an error along the lines of "Unable to create directory uploads/2023/08. Is its parent directory writable by the server?" when uploading images to the WP Media Library, you must reset the permissions of the `uploads` folder:
+
+1. Run your project
+2. In Docker Desktop, click into the `nginx` container, and under the `Terminal` tab run the following:
+```bash
+cd var/www/html/web/app
+chown -R www-data:www-data uploads
+chmod -R 755 uploads
+```
+3. Try uploading an image again and it should work
+
 ## Tools
 
 ### Update WordPress Core and Composer packages (plugins/themes)
