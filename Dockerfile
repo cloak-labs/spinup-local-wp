@@ -1,5 +1,5 @@
-# Use a PHP base image with PHP 8.1
-FROM php:8.1-fpm
+# Use a PHP base image with PHP 8.2 -- this is where we can update PHP version for WP
+FROM php:8.2-fpm
 
 # Install persistent dependencies
 RUN set -eux; \

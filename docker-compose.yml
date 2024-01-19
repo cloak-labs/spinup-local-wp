@@ -16,6 +16,8 @@ services:
     depends_on:
       - wordpress
     restart: always
+    logging:
+      driver: ${DOCKER_LOGGING_DRIVER_NGINX:-none}
 
   mysql:
     image: mariadb:10.7
@@ -31,6 +33,8 @@ services:
     restart: always
     ports:
       - "3306:3306"
+    logging:
+      driver: ${DOCKER_LOGGING_DRIVER_MYSQL:-none}
 
   wordpress:
     build:
@@ -46,6 +50,8 @@ services:
     restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    logging:
+      driver: ${DOCKER_LOGGING_DRIVER_WP:-none}
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -60,6 +66,8 @@ services:
       - "8082:80"
     links:
       - mysql:mysql
+    logging:
+      driver: ${DOCKER_LOGGING_DRIVER_PHPMYADMIN:-none}
 
   mailhog:
     container_name: ${APP_NAME}-mailhog
@@ -67,6 +75,8 @@ services:
     ports:
       - "8025:8025"
       - "1025:1025"
+    logging:
+      driver: ${DOCKER_LOGGING_DRIVER_MAILHOG:-none}
 
   composer:
     image: composer
@@ -76,3 +86,5 @@ services:
     volumes:
       - "${VOLUME_WORDPRESS_PATH:-../../../}:/var/www/html:rw,cached"
       - "${VOLUME_LOCAL_PACKAGES_PATH}:/var/www/local-packages:rw,cached"
+    logging:
+      driver: ${DOCKER_LOGGING_DRIVER_COMPOSER:-none}
