@@ -26,6 +26,8 @@ RUN set -ex; \
         exif \
         gd \
         mysqli \
+        pdo \
+        pdo_mysql \
         zip \
     ; \
     pecl install imagick-3.7.0; \
