@@ -76,7 +76,7 @@ If you get an error along the lines of "Unable to create directory uploads/2023/
 2. In Docker Desktop, click into the `nginx` container, and under the `Terminal` tab run the following:
 
 ```bash
-cd var/www/html/web/app
+cd var/www/html/public/app
 chown -R www-data:www-data uploads
 chmod -R 755 uploads
 ```

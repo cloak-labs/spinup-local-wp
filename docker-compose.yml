@@ -21,9 +21,10 @@ services:
   mysql:
     image: mariadb:10.7
     container_name: ${APP_NAME}-mysql
-    command: --lower_case_table_names=2
+    command: --defaults-extra-file=/etc/mysql/conf.d/mariadb.cnf --lower_case_table_names=2
     volumes:
       - "${VOLUME_WORDPRESS_PATH:-../../../}data/db:/var/lib/mysql:delegated,rw"
+      - ./config/mariadb.cnf:/etc/mysql/conf.d/mariadb.cnf:ro
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
       - MYSQL_DATABASE=${DB_NAME}
@@ -42,6 +43,9 @@ services:
     container_name: ${APP_NAME}-wordpress
     volumes:
       - ./config/php.ini:/usr/local/etc/php/conf.d/php.ini
+      - ./config/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+      - ./config/fpm/php-fpm.conf:/usr/local/etc/php-fpm.conf
+      - ./config/fpm/www.conf:/usr/local/etc/php-fpm.d/www.conf
       - "${VOLUME_WORDPRESS_PATH:-../../../}:/var/www/html:rw,cached"
       - "${VOLUME_LOCAL_PACKAGES_PATH}:/var/www/local-packages:rw,cached"
     depends_on:
@@ -69,8 +73,8 @@ services:
       driver: ${DOCKER_LOGGING_DRIVER_PHPMYADMIN:-none}
 
   mailhog:
-    container_name: ${APP_NAME}-mailhog
     image: mailhog/mailhog
+    container_name: ${APP_NAME}-mailhog
     ports:
       - "8025:8025"
       - "1025:1025"
@@ -82,6 +86,8 @@ services:
     container_name: ${APP_NAME}-composer
     working_dir: /var/www/html
     restart: "no"
+    environment:
+      - "COMPOSER_IGNORE_PLATFORM_REQS=1"
     volumes:
       - "${VOLUME_WORDPRESS_PATH:-../../../}:/var/www/html:rw,cached"
       - "${VOLUME_LOCAL_PACKAGES_PATH}:/var/www/local-packages:rw,cached"

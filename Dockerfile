@@ -6,6 +6,8 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         ghostscript \
+        libmagickwand-6.q16 \
+        libzip4 \
     ; \
     rm -rf /var/lib/apt/lists/*
 
@@ -71,17 +73,7 @@ RUN { \
 } > /usr/local/etc/php/conf.d/error-logging.ini
 
 # Install and configure Xdebug
-RUN pecl install xdebug; \
-    docker-php-ext-enable xdebug; \
-    { \
-        echo '[xdebug]'; \
-        echo 'xdebug.mode = debug'; \
-        echo 'xdebug.start_with_request = trigger'; \
-        echo 'xdebug.client_port = 9003'; \
-        echo 'xdebug.client_host = host.docker.internal'; \
-        echo 'xdebug.log = /tmp/xdebug.log'; \
-        echo 'xdebug.connect_timeout_ms = 600'; \
-    } > /usr/local/etc/php/conf.d/xdebug.ini
+RUN pecl install xdebug && docker-php-ext-enable xdebug
 
 # Set the WordPress version and SHA256 hash
 # ENV WORDPRESS_VERSION 6.3.1
