@@ -86,8 +86,9 @@ services:
     container_name: ${APP_NAME}-composer
     working_dir: /var/www/html
     restart: "no"
-    environment:
-      - "COMPOSER_IGNORE_PLATFORM_REQS=1"
+    # temporarily disabled the below because it allowed packages requiring php 8.4 to be installed, despite the platform being set to php 8.2 to line up with prod
+    # environment:
+    #   - "COMPOSER_IGNORE_PLATFORM_REQS=1"
     volumes:
       - "${VOLUME_WORDPRESS_PATH:-../../../}:/var/www/html:rw,cached"
       - "${VOLUME_LOCAL_PACKAGES_PATH}:/var/www/local-packages:rw,cached"
