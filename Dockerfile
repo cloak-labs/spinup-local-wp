@@ -1,29 +1,46 @@
-# Use a PHP base image with PHP 8.2 -- this is where we can update PHP version for WP
-FROM php:8.2-fpm
+# Note: Use docker-compose up -d --force-recreate --build when Dockerfile has changed.
+# ========================================================
 
-# Install persistent dependencies
+# --------------------------------------------
+# Build mhsendmail from source (works on arm64 + amd64)
+# --------------------------------------------
+FROM golang:1.22-bookworm AS mhsendmail-builder
+
+RUN set -eux; \
+    go install github.com/mailhog/mhsendmail@latest
+
+# --------------------------------------------
+# PHP-FPM image for WordPress (PHP 8.2)
+# --------------------------------------------
+FROM php:8.2-fpm-bullseye
+
+# Install OS deps (runtime + build)
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         ghostscript \
-        libmagickwand-6.q16 \
-        libzip4 \
+        ca-certificates \
+        curl \
+        sudo \
+        less \
+        mariadb-client \
+        \
+        # imagick runtime + headers
+        imagemagick \
+        libmagickwand-dev \
+        \
+        # php extensions deps
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        libpng-dev \
+        libzip-dev \
     ; \
     rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions required for WordPress
-RUN set -ex; \
-    savedAptMark="$(apt-mark showmanual)"; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-        libfreetype6-dev \
-        libjpeg-dev \
-        libmagickwand-dev \
-        libpng-dev \
-        libzip-dev \
-    ; \
+RUN set -eux; \
     docker-php-ext-configure gd --with-freetype --with-jpeg; \
-    docker-php-ext-install -j "$(nproc)" \
+    docker-php-ext-install -j"$(nproc)" \
         bcmath \
         exif \
         gd \
@@ -32,21 +49,8 @@ RUN set -ex; \
         pdo_mysql \
         zip \
     ; \
-    pecl install imagick-3.7.0; \
-    docker-php-ext-enable imagick; \
-    \
-    apt-mark auto '.*' > /dev/null; \
-    apt-mark manual $savedAptMark; \
-    ldd "$(php -r 'echo ini_get("extension_dir");')"/*.so \
-        | awk '/=>/ { print $3 }' \
-        | sort -u \
-        | xargs -r dpkg-query -S \
-        | cut -d: -f1 \
-        | sort -u \
-        | xargs -rt apt-mark manual; \
-    \
-    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
-    rm -rf /var/lib/apt/lists/*
+    pecl install imagick; \
+    docker-php-ext-enable imagick
 
 # Set recommended PHP.ini settings for opcache
 RUN set -eux; \
@@ -60,56 +64,37 @@ RUN set -eux; \
     } > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
 # Configure error handling and logging
-RUN { \
-    echo 'error_reporting = E_ERROR | E_WARNING | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_RECOVERABLE_ERROR'; \
-    echo 'display_errors = Off'; \
-    echo 'display_startup_errors = Off'; \
-    echo 'log_errors = On'; \
-    echo 'error_log = /dev/stderr'; \
-    echo 'log_errors_max_len = 1024'; \
-    echo 'ignore_repeated_errors = On'; \
-    echo 'ignore_repeated_source = Off'; \
-    echo 'html_errors = Off'; \
-} > /usr/local/etc/php/conf.d/error-logging.ini
+RUN set -eux; \
+    { \
+        echo 'error_reporting = E_ERROR | E_WARNING | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_RECOVERABLE_ERROR'; \
+        echo 'display_errors = Off'; \
+        echo 'display_startup_errors = Off'; \
+        echo 'log_errors = On'; \
+        echo 'error_log = /dev/stderr'; \
+        echo 'log_errors_max_len = 1024'; \
+        echo 'ignore_repeated_errors = On'; \
+        echo 'ignore_repeated_source = Off'; \
+        echo 'html_errors = Off'; \
+    } > /usr/local/etc/php/conf.d/error-logging.ini
 
 # Install and configure Xdebug
-RUN pecl install xdebug && docker-php-ext-enable xdebug
-
-# Set the WordPress version and SHA256 hash
-# ENV WORDPRESS_VERSION 6.3.1
-# ENV WORDPRESS_SHA1 e1b6477a99595fd72405645c0ad77e10c9337c3d
-
-# OLD:
-# ENV WORDPRESS_SHA1 7a5a6d0591771e730b05c49d0c3fc134624d0491
-
-# Install WordPress
-# RUN set -ex; \
-#     curl -o wordpress.tar.gz -fSL "https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"; \
-#     echo "$WORDPRESS_SHA1 *wordpress.tar.gz" | sha1sum -c -; \
-#     tar -xzf wordpress.tar.gz -C /usr/src/; \
-#     rm wordpress.tar.gz; \
-#     chown -R www-data:www-data /usr/src/wordpress; \
-#     mkdir wp-content; \
-#     for dir in /usr/src/wordpress/wp-content/*/; do \
-#         dir="$(basename "${dir%/}")"; \
-#         mkdir "wp-content/$dir"; \
-#     done; \
-#     chown -R www-data:www-data wp-content; \
-#     chmod -R 755 wp-content; \
+RUN set -eux; \
+    pecl install xdebug; \
+    docker-php-ext-enable xdebug
 
 # Set up volume for WordPress files
 VOLUME /var/www/html
 
 # Install WP-CLI
-RUN apt-get update && apt-get install -y sudo less mariadb-client
-RUN curl -o /bin/wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-RUN chmod +x /bin/wp-cli.phar
-RUN cd /bin && mv wp-cli.phar wp
-RUN mkdir -p /var/www/.wp-cli/cache && chown www-data:www-data /var/www/.wp-cli/cache
+RUN set -eux; \
+    curl -fsSL -o /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar; \
+    chmod +x /usr/local/bin/wp; \
+    mkdir -p /var/www/.wp-cli/cache; \
+    chown -R www-data:www-data /var/www/.wp-cli
 
-# Forward email to Mailhog
-RUN curl --location --output /usr/local/bin/mhsendmail https://github.com/mailhog/mhsendmail/releases/download/v0.2.0/mhsendmail_linux_amd64 && \
-    chmod +x /usr/local/bin/mhsendmail
-RUN echo 'sendmail_path="/usr/local/bin/mhsendmail --smtp-addr=mailhog:1025 --from=no-reply@gbp.lo"' > /usr/local/etc/php/conf.d/mailhog.ini
-
-# Note: Use docker-compose up -d --force-recreate --build when Dockerfile has changed.
+# Forward email to Mailhog using mhsendmail (built for the current platform)
+COPY --from=mhsendmail-builder /go/bin/mhsendmail /usr/local/bin/mhsendmail
+RUN set -eux; \
+    chmod +x /usr/local/bin/mhsendmail; \
+    echo 'sendmail_path="/usr/local/bin/mhsendmail --smtp-addr=mailhog:1025 --from=no-reply@gbp.lo"' > /usr/local/etc/php/conf.d/mailhog.ini
+        
