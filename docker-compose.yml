@@ -61,6 +61,7 @@ services:
     container_name: ${APP_NAME}-phpmyadmin
     volumes:
       - ./config/phpmyadmin.ini:/usr/local/etc/php/conf.d/phpmyadmin.ini
+      - ./config/apache-servername.conf:/etc/apache2/conf.d/servername.conf
     environment:
       PMA_HOST: "${DB_HOST}"
       PMA_PORT: 3306
