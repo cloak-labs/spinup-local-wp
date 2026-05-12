@@ -37,6 +37,19 @@ RUN set -eux; \
     ; \
     rm -rf /var/lib/apt/lists/*
 
+# Prefer IPv4 over IPv6 for dual-stack hostnames (fixes Xdebug choosing AAAA like host.docker.internal first)
+# Docker Desktop exposes host.docker.internal as both A and AAAA, but containers often lack IPv6 routes.
+RUN set -eux; \
+    echo 'precedence ::ffff:0:0/96  100' >> /etc/gai.conf
+
+# Entry-point wrapper: resolve host.docker.internal to IPv4 (gethostbyname) and feed Xdebug a numeric client_host via XDEBUG_CONFIG.
+COPY docker-entrypoint.sh /usr/local/bin/spinup-local-wp-entrypoint
+RUN set -eux; \
+    chmod +x /usr/local/bin/spinup-local-wp-entrypoint
+
+ENTRYPOINT ["spinup-local-wp-entrypoint"]
+CMD ["php-fpm"]
+
 # Install PHP extensions required for WordPress
 RUN set -eux; \
     docker-php-ext-configure gd --with-freetype --with-jpeg; \

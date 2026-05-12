@@ -51,8 +51,6 @@ services:
     depends_on:
       - mysql
     restart: always
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     logging:
       driver: ${DOCKER_LOGGING_DRIVER_WP:-none}
 
