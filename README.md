@@ -8,7 +8,7 @@ It works similarly to how `@wordpress/env` abstracts the complexity of managing 
 
 It's an NPM package that acts as an abstraction layer over a typical, best-practice [Docker + Docker Compose](https://docs.docker.com/compose/) setup for WordPress. It includes the following services/features:
 
-- PHP 8.2,
+- PHP 8.4,
 - Nginx server,
 - MariaDB (popular MySQL fork),
 - [WP-CLI](https://wp-cli.org/) - the command-line interface for WordPress,
@@ -22,7 +22,7 @@ It's an NPM package that acts as an abstraction layer over a typical, best-pract
 You must download/install the following:
 
 - Composer
-- PHP >= 8.0
+- PHP >= 8.4
 - [Docker](https://www.docker.com/get-started) + Docker Compose + Docker Desktop
 - NPM
 - Node.js
@@ -44,7 +44,7 @@ Otherwise, if you're using the regular Bedrock boilerplate, follow these steps:
 "dev": "spinup-local-wp dc up",
 "down": "spinup-local-wp dc down",
 "stop": "spinup-local-wp dc stop",
-"composer": "spinup-local-wp dc run composer",
+"composer": "spinup-local-wp dc run --rm --remove-orphans composer",
 "generate-env": "php -r \"copy('.env.example', '.env');\""
 "spinup-local-wp": "spinup-local-wp"
 ```

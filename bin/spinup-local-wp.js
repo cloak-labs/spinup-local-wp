@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 const path = require('path');
 const yargs = require('yargs');
 const dotenv = require('dotenv');
@@ -41,32 +41,33 @@ yargs
       // so we must forward raw args after "dc" (or "docker-compose") verbatim.
       const rawArgs = process.argv.slice(2);
       const dcIdx = rawArgs.findIndex((a) => a === 'dc' || a === 'docker-compose');
-      const dockerComposeArgs = (dcIdx >= 0 ? rawArgs.slice(dcIdx + 1) : argv._.slice(1)).join(' ');
+      const dockerComposeArgs = dcIdx >= 0 ? rawArgs.slice(dcIdx + 1) : argv._.slice(1);
 
       // ensure that any env variables that weren't provided by user are set using default values:
       for (const [key, value] of Object.entries(envVariables)) {
         process.env[key] = value;
       }
 
-      // Execute docker-compose commands
-      const dockerComposeFileArgs = dockerComposePaths.map((p) => `-f "${p}"`).join(' ');
-      const dockerComposeProcess = exec(
-        `docker-compose ${dockerComposeFileArgs} ${dockerComposeArgs}`,
-        (error, stdout, stderr) => {
-          if (error) {
-            console.error(`Error executing docker-compose command: ${error}`);
-            return;
-          }
-
-          console.log(stdout);
-          console.error(stderr);
-        }
+      const dockerComposeFileArgs = dockerComposePaths.flatMap((p) => ['-f', p]);
+      const child = spawn(
+        'docker-compose',
+        [...dockerComposeFileArgs, ...dockerComposeArgs],
+        { stdio: 'inherit', env: process.env }
       );
 
-      // Forward docker-compose output to the console
-      dockerComposeProcess.stdout.pipe(process.stdout);
-      dockerComposeProcess.stderr.pipe(process.stderr);
+      return new Promise(() => {
+        child.on('error', (error) => {
+          console.error(`Error executing docker-compose command: ${error.message}`);
+          process.exit(1);
+        });
 
+        child.on('close', (code, signal) => {
+          if (signal) {
+            process.exit(1);
+          }
+          process.exit(code ?? 1);
+        });
+      });
     },
   })
   .help().argv;

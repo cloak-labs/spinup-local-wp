@@ -10,9 +10,9 @@ RUN set -eux; \
     go install github.com/mailhog/mhsendmail@latest
 
 # --------------------------------------------
-# PHP-FPM image for WordPress (PHP 8.2)
+# PHP-FPM image for WordPress (PHP 8.4)
 # --------------------------------------------
-FROM php:8.2-fpm-bullseye
+FROM php:8.4-fpm-bookworm
 
 # Install OS deps (runtime + build)
 RUN set -eux; \
