@@ -27,5 +27,12 @@
   "dependencies": {
     "dotenv": "^16.3.1",
     "yargs": "^17.7.2"
+  },
+  "scripts": {
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check ."
+  },
+  "devDependencies": {
+    "oxfmt": "0.71.0"
   }
 }
