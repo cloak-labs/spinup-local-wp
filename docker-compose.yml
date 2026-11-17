@@ -49,6 +49,7 @@ services:
       - ./config/fpm/www.conf:/usr/local/etc/php-fpm.d/www.conf
       - "${VOLUME_WORDPRESS_PATH:-../../../}:/var/www/html:rw,cached"
       - "${VOLUME_LOCAL_PACKAGES_PATH}:/var/www/local-packages:rw,cached"
+      - "${VOLUME_CROSSWIND_PATH:-../../crosswind}:/var/www/crosswind:ro"
     depends_on:
       - mysql
     restart: always
